@@ -34,7 +34,7 @@ class TransactionProvider extends ChangeNotifier {
       _state = RequestState.Error;
       notifyListeners();
     }, (transactions) {
-      _hasReachedMaxPage = transactions.isEmpty;
+      _hasReachedMaxPage = transactions.length < 10;
       _transactions = transactions;
       _state = RequestState.Loaded;
       _page++;

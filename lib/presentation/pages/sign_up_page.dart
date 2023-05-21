@@ -22,50 +22,44 @@ class _SignUpPageState extends State<SignUpPage> {
     'username': '',
     'name': '',
   };
-  bool _isLoading = false;
 
   _handleSignUp() async {
     if (_formKey.currentState?.validate() == false) {
       // Invalid!
       return;
     }
-    _formKey.currentState?.save();
     AuthProvider provider = Provider.of<AuthProvider>(context, listen: false);
-    setState(() {
-      _isLoading = true;
-    });
 
-    if (await provider.register(
-      name: _registerData['name'] ?? "",
-      username: _registerData['username'] ?? "",
-      email: _registerData['email'] ?? "",
-      password: _registerData['password'] ?? "",
-    )) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Berhasil Sign Up',
-            style: primaryTextStyle,
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pushReplacementNamed(context, MainPage.ROUTE_NAME);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Gagal Sign Up',
-            style: primaryTextStyle,
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    _formKey.currentState?.save();
 
-    setState(() {
-      _isLoading = false;
-    });
+    await provider.register(
+        name: _registerData['name'] ?? "",
+        username: _registerData['username'] ?? "",
+        email: _registerData['email'] ?? "",
+        password: _registerData['password'] ?? "",
+        onFailure: (message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Gagal Sign Up',
+                style: primaryTextStyle,
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        onSuccess: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Berhasil Sign Up',
+                style: primaryTextStyle,
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushReplacementNamed(context, MainPage.ROUTE_NAME);
+        });
   }
 
   @override
@@ -89,7 +83,14 @@ class _SignUpPageState extends State<SignUpPage> {
                       _buildUsernameField(),
                       _buildEmailField(),
                       _buildPasswordField(),
-                      _isLoading ? LoadingButton() : _buildSignUpButton(),
+                      Consumer<AuthProvider>(
+                        builder: ((context, value, child) {
+                          if (value.isLoading) {
+                            return LoadingButton();
+                          }
+                          return _buildSignUpButton();
+                        }),
+                      ),
                     ],
                   ),
                 ),
