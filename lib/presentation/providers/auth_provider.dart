@@ -12,6 +12,10 @@ class AuthProvider with ChangeNotifier {
     this.signUp,
     this.signIn,
   );
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
   late UserEntity _user;
   UserEntity get user => _user;
 
@@ -23,27 +27,28 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> register({
+  Future<void> register({
     required String name,
     required String username,
     required String email,
     required String password,
+    required void Function(String) onFailure,
+    required void Function() onSuccess,
   }) async {
     try {
+      _isLoading = true;
       var result = await signUp.execute(name, username, email, password);
-      bool status = false;
       result.fold((error) {
-        status = false;
         _errorMessage = error.message;
+        onFailure(_errorMessage);
       }, (user) async {
         await AuthHelper.setAccessToken(user.token ?? "");
-        status = true;
+        onSuccess();
       });
-
-      return status;
     } catch (e) {
       _errorMessage = e.toString();
-      return false;
+      onFailure(_errorMessage);
+      _isLoading = false;
     }
   }
 
